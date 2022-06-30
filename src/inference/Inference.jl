@@ -174,6 +174,22 @@ function AbstractMCMC.sample(
     return AbstractMCMC.sample(rng, model, samplers, swap_every, N; kwargs...)
 end
 
+function AbstractMCMC.sample(    ## add sample function for NRST mcmcsample
+    rng::AbstractRNG,
+    model::AbstractModel,
+    algs::Vector{<:InferenceAlgorithm},
+    swap_every::Integer,
+    N_tune::Integer,
+    N_sample::Integer;
+    kwargs...
+)
+    """
+    Replica exchange
+    """
+    samplers = [Sampler(alg, model) for alg in algs]
+    return AbstractMCMC.mcmcsample(rng, model, samplers, swap_every, N_tune, N_sample; kwargs...)
+end
+
 function AbstractMCMC.sample(
     rng::AbstractRNG,
     model::AbstractModel,
