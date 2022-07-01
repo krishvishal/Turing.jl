@@ -250,6 +250,30 @@ end
 function AbstractMCMC.sample(
     rng::AbstractRNG,
     model::AbstractModel,
+    samplers::Vector{<:Sampler{<:InferenceAlgorithm}},
+    swap_every::Integer,
+    N_tune::Integer,
+    N_sample::Integer;
+    chain_type=MCMCChains.Chains,
+    resume_from=nothing,
+    progress=PROGRESS[],
+    kwargs...
+)
+    """
+    Replica exchange
+    """
+    println("Replica Exchange AbstractMCMC.sample")
+    # if resume_from === nothing
+    return AbstractMCMC.mcmcsample(rng, model, samplers, swap_every, N_tune, N_sample;
+        chain_type=chain_type, progress=progress, kwargs...)
+    # else
+    #     return resume(resume_from, N; chain_type=chain_type, progress=progress, kwargs...)
+    # end
+end
+
+function AbstractMCMC.sample(
+    rng::AbstractRNG,
+    model::AbstractModel,
     alg::Prior,
     N::Integer;
     chain_type=MCMCChains.Chains,
