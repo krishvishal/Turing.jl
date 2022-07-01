@@ -24,8 +24,10 @@ using DocStringExtensions: TYPEDEF, TYPEDFIELDS
 using DataStructures: OrderedSet
 
 import AbstractMCMC
-import AdvancedHMC; const AHMC = AdvancedHMC
-import AdvancedMH; const AMH = AdvancedMH
+import AdvancedHMC
+const AHMC = AdvancedHMC
+import AdvancedMH
+const AMH = AdvancedMH
 import AdvancedPS
 import BangBang
 import ..Essential: getchunksize, getADbackend
@@ -34,37 +36,37 @@ import Random
 import MCMCChains
 import StatsBase: predict
 
-export  InferenceAlgorithm,
-        Hamiltonian,
-        GibbsComponent,
-        StaticHamiltonian,
-        AdaptiveHamiltonian,
-        SampleFromUniform,
-        SampleFromPrior,
-        MH,
-        ESS,
-        Emcee,
-        Gibbs,      # classic sampling
-        GibbsConditional,
-        HMC,
-        SGLD,
-        PolynomialStepsize,
-        SGHMC,
-        HMCDA,
-        NUTS,       # Hamiltonian-like sampling
-        DynamicNUTS,
-        IS,
-        SMC,
-        CSMC,
-        PG,
-        Prior,
-        assume,
-        dot_assume,
-        observe,
-        dot_observe,
-        resume,
-        predict,
-        isgibbscomponent
+export InferenceAlgorithm,
+    Hamiltonian,
+    GibbsComponent,
+    StaticHamiltonian,
+    AdaptiveHamiltonian,
+    SampleFromUniform,
+    SampleFromPrior,
+    MH,
+    ESS,
+    Emcee,
+    Gibbs,      # classic sampling
+    GibbsConditional,
+    HMC,
+    SGLD,
+    PolynomialStepsize,
+    SGHMC,
+    HMCDA,
+    NUTS,       # Hamiltonian-like sampling
+    DynamicNUTS,
+    IS,
+    SMC,
+    CSMC,
+    PG,
+    Prior,
+    assume,
+    dot_assume,
+    observe,
+    dot_observe,
+    resume,
+    predict,
+    isgibbscomponent
 
 #######################
 # Sampler abstraction #
@@ -76,8 +78,8 @@ abstract type Hamiltonian{AD} <: InferenceAlgorithm end
 abstract type StaticHamiltonian{AD} <: Hamiltonian{AD} end
 abstract type AdaptiveHamiltonian{AD} <: Hamiltonian{AD} end
 
-getchunksize(::Type{<:Hamiltonian{AD}}) where AD = getchunksize(AD)
-getADbackend(::Hamiltonian{AD}) where AD = AD()
+getchunksize(::Type{<:Hamiltonian{AD}}) where {AD} = getchunksize(AD)
+getADbackend(::Hamiltonian{AD}) where {AD} = AD()
 
 # Algorithm for sampling from the prior
 struct Prior <: InferenceAlgorithm end
@@ -104,23 +106,23 @@ end
 # Default Transition #
 ######################
 
-struct Transition{T, F<:AbstractFloat}
-    θ  :: T
-    lp :: F
+struct Transition{T,F<:AbstractFloat}
+    θ::T
+    lp::F
 end
 
 function Transition(vi::AbstractVarInfo, nt::NamedTuple=NamedTuple())
     theta = merge(tonamedtuple(vi), nt)
     lp = getlogp(vi)
-    return Transition{typeof(theta), typeof(lp)}(theta, lp)
+    return Transition{typeof(theta),typeof(lp)}(theta, lp)
 end
 
-metadata(t::Transition) = (lp = t.lp,)
+metadata(t::Transition) = (lp=t.lp,)
 
 DynamicPPL.getlogp(t::Transition) = t.lp
 
 # Metadata of VarInfo object
-metadata(vi::AbstractVarInfo) = (lp = getlogp(vi),)
+metadata(vi::AbstractVarInfo) = (lp=getlogp(vi),)
 
 #########################################
 # Default definitions for the interface #
@@ -147,6 +149,20 @@ function AbstractMCMC.sample(
     Replica exchange
     """
     return AbstractMCMC.sample(Random.GLOBAL_RNG, model, algs, swap_every, N; kwargs...)
+end
+
+function AbstractMCMC.sample(
+    model::AbstractModel,
+    algs::Vector{<:InferenceAlgorithm},
+    swap_every::Integer,
+    N_tune::Integer,
+    N_sample::Integer;
+    kwargs...
+)
+    """
+    Replica exchange
+    """
+    return AbstractMCMC.sample(Random.GLOBAL_RNG, model, algs, swap_every, N_tune, N_sample; kwargs...)
 end
 
 function AbstractMCMC.sample(
@@ -202,7 +218,7 @@ function AbstractMCMC.sample(
 )
     if resume_from === nothing
         return AbstractMCMC.mcmcsample(rng, model, sampler, N;
-                                       chain_type=chain_type, progress=progress, kwargs...)
+            chain_type=chain_type, progress=progress, kwargs...)
     else
         return resume(resume_from, N; chain_type=chain_type, progress=progress, kwargs...)
     end
@@ -225,7 +241,7 @@ function AbstractMCMC.sample(
     println("Replica Exchange AbstractMCMC.sample")
     # if resume_from === nothing
     return AbstractMCMC.mcmcsample(rng, model, samplers, swap_every, N;
-                                    chain_type=chain_type, progress=progress, kwargs...)
+        chain_type=chain_type, progress=progress, kwargs...)
     # else
     #     return resume(resume_from, N; chain_type=chain_type, progress=progress, kwargs...)
     # end
@@ -243,7 +259,7 @@ function AbstractMCMC.sample(
 )
     if resume_from === nothing
         return AbstractMCMC.mcmcsample(rng, model, SampleFromPrior(), N;
-                                       chain_type=chain_type, progress=progress, kwargs...)
+            chain_type=chain_type, progress=progress, kwargs...)
     else
         return resume(resume_from, N; chain_type=chain_type, progress=progress, kwargs...)
     end
@@ -258,7 +274,7 @@ function AbstractMCMC.sample(
     kwargs...
 )
     return AbstractMCMC.sample(Random.GLOBAL_RNG, model, alg, ensemble, N, n_chains;
-                               kwargs...)
+        kwargs...)
 end
 
 function AbstractMCMC.sample(
@@ -271,7 +287,7 @@ function AbstractMCMC.sample(
     kwargs...
 )
     return AbstractMCMC.sample(rng, model, Sampler(alg, model), ensemble, N, n_chains;
-                               kwargs...)
+        kwargs...)
 end
 
 function AbstractMCMC.sample(
@@ -286,7 +302,7 @@ function AbstractMCMC.sample(
     kwargs...
 )
     return AbstractMCMC.mcmcsample(rng, model, sampler, ensemble, N, n_chains;
-                                   chain_type=chain_type, progress=progress, kwargs...)
+        chain_type=chain_type, progress=progress, kwargs...)
 end
 
 function AbstractMCMC.sample(
@@ -301,7 +317,7 @@ function AbstractMCMC.sample(
     kwargs...
 )
     return AbstractMCMC.sample(rng, model, SampleFromPrior(), ensemble, N, n_chains;
-                               chain_type=chain_type, progress=progress, kwargs...)
+        chain_type=chain_type, progress=progress, kwargs...)
 end
 
 ##########################
@@ -329,7 +345,7 @@ function _params_to_array(ts::Vector)
     end
     names = collect(names_set)
     vals = [get(dicts[i], key, missing) for i in eachindex(dicts),
-        (j, key) in enumerate(names)]
+            (j, key) in enumerate(names)]
 
     return names, vals
 end
@@ -359,7 +375,7 @@ function get_transition_extras(ts::AbstractVector)
     return names_values(extra_data)
 end
 
-function names_values(extra_data::AbstractVector{<:NamedTuple{names}}) where names
+function names_values(extra_data::AbstractVector{<:NamedTuple{names}}) where {names}
     values = [getfield(data, name) for data in extra_data, name in names]
     return collect(names), values
 end
@@ -393,11 +409,11 @@ function AbstractMCMC.bundle_samples(
     spl::Union{Sampler{<:InferenceAlgorithm},SampleFromPrior},
     state,
     chain_type::Type{MCMCChains.Chains};
-    save_state = false,
-    stats = missing,
-    sort_chain = false,
-    discard_initial = 0,
-    thinning = 1,
+    save_state=false,
+    stats=missing,
+    sort_chain=false,
+    discard_initial=0,
+    thinning=1,
     kwargs...
 )
     # Convert transitions to array format.
@@ -416,7 +432,7 @@ function AbstractMCMC.bundle_samples(
 
     # Set up the info tuple.
     if save_state
-        info = (model = model, sampler = spl, samplerstate = state)
+        info = (model=model, sampler=spl, samplerstate=state)
     else
         info = NamedTuple()
     end
@@ -433,11 +449,11 @@ function AbstractMCMC.bundle_samples(
     chain = MCMCChains.Chains(
         parray,
         nms,
-        (internals = extra_params,);
+        (internals=extra_params,);
         evidence=le,
         info=info,
         start=discard_initial + 1,
-        thin=thinning,
+        thin=thinning
     )
 
     return sort_chain ? sort(chain) : chain
@@ -468,7 +484,7 @@ function resume(chain::MCMCChains.Chains, args...; kwargs...)
 end
 
 function resume(rng::Random.AbstractRNG, chain::MCMCChains.Chains, args...;
-                progress=PROGRESS[], kwargs...)
+    progress=PROGRESS[], kwargs...)
     isempty(chain.info) && error("[Turing] cannot resume from a chain without state info")
 
     # Sample a new chain.
@@ -477,9 +493,9 @@ function resume(rng::Random.AbstractRNG, chain::MCMCChains.Chains, args...;
         chain.info[:model],
         chain.info[:sampler],
         args...;
-        resume_from = chain,
-        chain_type = MCMCChains.Chains,
-        progress = progress,
+        resume_from=chain,
+        chain_type=MCMCChains.Chains,
+        progress=progress,
         kwargs...
     )
 end
@@ -508,15 +524,15 @@ for alg in (:SMC, :PG, :MH, :IS, :ESS, :Gibbs, :Emcee)
     @eval DynamicPPL.getspace(::$alg{space}) where {space} = space
 end
 for alg in (:HMC, :HMCDA, :NUTS, :SGLD, :SGHMC)
-    @eval DynamicPPL.getspace(::$alg{<:Any, space}) where {space} = space
+    @eval DynamicPPL.getspace(::$alg{<:Any,space}) where {space} = space
 end
 
 function DynamicPPL.get_matching_type(
-    spl::Sampler{<:Union{PG, SMC}},
+    spl::Sampler{<:Union{PG,SMC}},
     vi,
     ::Type{TV},
-) where {T, N, TV <: Array{T, N}}
-    return TArray{T, N}
+) where {T,N,TV<:Array{T,N}}
+    return TArray{T,N}
 end
 
 ##############
@@ -599,14 +615,14 @@ true
 function predict(model::Model, chain::MCMCChains.Chains; kwargs...)
     return predict(Random.GLOBAL_RNG, model, chain; kwargs...)
 end
-function predict(rng::AbstractRNG, model::Model, chain::MCMCChains.Chains; include_all = false)
+function predict(rng::AbstractRNG, model::Model, chain::MCMCChains.Chains; include_all=false)
     # Don't need all the diagnostics
     chain_parameters = MCMCChains.get_sections(chain, :parameters)
 
     spl = DynamicPPL.SampleFromPrior()
 
     # Sample transitions using `spl` conditioned on values in `chain`
-    transitions = transitions_from_chain(rng, model, chain_parameters; sampler = spl)
+    transitions = transitions_from_chain(rng, model, chain_parameters; sampler=spl)
 
     # Let the Turing internals handle everything else for you
     chain_result = reduce(
@@ -691,7 +707,7 @@ function transitions_from_chain(
     rng::Random.AbstractRNG,
     model::Turing.Model,
     chain::MCMCChains.Chains;
-    sampler = DynamicPPL.SampleFromPrior()
+    sampler=DynamicPPL.SampleFromPrior()
 )
     vi = Turing.VarInfo(model)
 
