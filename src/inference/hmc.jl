@@ -416,6 +416,8 @@ function NUTS{AD}(kwargs...) where AD
     NUTS{AD}(-1, 0.65, 1.0; kwargs...)
 end
 
+ConstructionBase.constructorof(::Type{NUTS{A,B,C}}) where {A,B,C} = (x...) -> NUTS{A,B,C}(x...)
+
 for alg in (:HMC, :HMCDA, :NUTS)
     @eval getmetricT(::$alg{<:Any, <:Any, metricT}) where {metricT} = metricT
 end

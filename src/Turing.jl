@@ -6,6 +6,7 @@ using Statistics, LinearAlgebra
 using Libtask
 @reexport using Distributions, MCMCChains, Libtask, AbstractMCMC, Bijectors
 using Tracker: Tracker
+using ConstructionBase
 
 import AdvancedVI
 import DynamicPPL: getspace, NoDist, NamedDist
